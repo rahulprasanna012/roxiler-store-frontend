@@ -6,6 +6,7 @@ import {
     InboxIcon,
     PowerIcon,
   } from "@heroicons/react/24/solid";
+import { StoreOutlined } from "@mui/icons-material";
   import { Link, useNavigate } from "react-router-dom";
   
   function DefaultSidebar() {
@@ -45,11 +46,11 @@ import {
               <span className="text-gray-700">Add User</span>
             </li>
           </Link>
-          
-          <Link to="/settings">
+
+          <Link to="/admin/store-list">
             <li className="flex items-center py-2 px-4 rounded-none hover:bg-gray-100 cursor-pointer">
-              <Cog6ToothIcon className="h-5 w-5 mr-3 text-gray-600" />
-              <span className="text-gray-700">Settings</span>
+              <StoreOutlined className="h-5 w-5 mr-3 text-gray-600" />
+              <span className="text-gray-700">Store List</span>
             </li>
           </Link>
   

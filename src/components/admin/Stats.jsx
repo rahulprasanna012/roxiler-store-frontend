@@ -23,12 +23,10 @@ import {
   IconButton,
   useTheme,
   Button,
-  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Rating as MuiRating
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -37,12 +35,11 @@ import {
   Person as PersonIcon,
   Clear as ClearIcon,
   FilterAlt as FilterIcon,
-  StarHalf as StarHalfIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 import AdminServices from '../../services/adminService';
 import UserServices from '../../services/userService';
-import RatingServices from '../../services/ratingService';
 
 const StatsDashboard = () => {
   const theme = useTheme();
@@ -50,14 +47,11 @@ const StatsDashboard = () => {
   const [stats, setStats] = useState({});
   const [allUsers, setAllUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [userRatings, setUserRatings] = useState({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [loadingRatings, setLoadingRatings] = useState({});
-  const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
-  const [selectedUserRatings, setSelectedUserRatings] = useState([]);
-  const [selectedUserName, setSelectedUserName] = useState('');
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   // Filters
   const initialFilters = {
@@ -82,10 +76,6 @@ const StatsDashboard = () => {
         setStats(statsData);
         setAllUsers(usersData);
         setFilteredUsers(usersData);
-        
-        // Pre-fetch ratings for store owners
-        const storeOwners = usersData.filter(user => user.role === 'store_owner');
-        await fetchRatingsForUsers(storeOwners);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -96,38 +86,6 @@ const StatsDashboard = () => {
     fetchData();
   }, []);
 
-  // Fetch ratings for store owners
-  const fetchRatingsForUsers = async (users) => {
-    const storeOwners = users.filter(user => user.role === 'store_owner');
-    const newRatings = { ...userRatings };
-    const newLoadingRatings = { ...loadingRatings };
-  
-    for (const user of storeOwners) {
-      if (!userRatings[user.id]) {
-        newLoadingRatings[user.id] = true;
-        try {
-          const response = await RatingServices.getUserRatings(user.id);
-          // Ensure we're using the correct data structure
-          const ratingsData = response.data || response; // Handle both cases
-          newRatings[user.id] = {
-            data: Array.isArray(ratingsData) ? ratingsData : ratingsData.data,
-            count: Array.isArray(ratingsData) ? ratingsData.length : ratingsData.count
-          };
-        } catch (error) {
-          console.error(`Error fetching ratings for user ${user.id}:`, error);
-          newRatings[user.id] = {
-            data: [],
-            count: 0
-          };
-        } finally {
-          newLoadingRatings[user.id] = false;
-        }
-      }
-    }
-  
-    setUserRatings(newRatings);
-    setLoadingRatings(newLoadingRatings);
-  };
   // Apply filters
   useEffect(() => {
     const filtered = allUsers.filter(user => {
@@ -151,44 +109,18 @@ const StatsDashboard = () => {
     setSearchParams(params);
     
     setFiltersApplied(Object.values(filters).some(Boolean));
-
-    // Fetch ratings for new store owners in filtered results
-    const newStoreOwners = filtered.filter(
-      user => user.role === 'store_owner' && !userRatings[user.id]
-    );
-    if (newStoreOwners.length > 0) {
-      fetchRatingsForUsers(newStoreOwners);
-    }
   }, [filters, allUsers, setSearchParams]);
 
-  // View ratings details
-  const handleViewRatings = async (userId, userName) => {
-    try {
-      setSelectedUserName(userName);
-      setRatingDialogOpen(true);
-      
-      if (userRatings[userId]) {
-        setSelectedUserRatings(userRatings[userId].data);
-      } else {
-        const response = await RatingServices.getUserRatings(userId);
-        setSelectedUserRatings(response.data.data);
-        
-        // Update cache
-        setUserRatings(prev => ({
-          ...prev,
-          [userId]: response.data
-        }));
-      }
-    } catch (error) {
-      console.error('Error viewing ratings:', error);
-    }
+  // View user details
+  const handleViewUser = (user) => {
+    setSelectedUser(user);
+    setUserDialogOpen(true);
   };
 
-  // Close ratings dialog
-  const handleCloseRatingDialog = () => {
-    setRatingDialogOpen(false);
-    setSelectedUserRatings([]);
-    setSelectedUserName('');
+  // Close user dialog
+  const handleCloseUserDialog = () => {
+    setUserDialogOpen(false);
+    setSelectedUser(null);
   };
 
   // Table pagination handlers
@@ -224,14 +156,6 @@ const StatsDashboard = () => {
     }
   };
 
-  // Calculate average rating
-  const calculateAverageRating = (ratings) => {
-    if (!ratings || !Array.isArray(ratings) || ratings.length === 0) return 0;
-    const validRatings = ratings.filter(r => typeof r.rating === 'number');
-    if (validRatings.length === 0) return 0;
-    const sum = validRatings.reduce((total, rating) => total + rating.rating, 0);
-    return (sum / validRatings.length).toFixed(1);
-  };
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -239,8 +163,6 @@ const StatsDashboard = () => {
       </Box>
     );
   }
-
-  
 
   return (
     <Box sx={{ p: 3 }}>
@@ -455,7 +377,7 @@ const StatsDashboard = () => {
                       <TableCell>Email</TableCell>
                       <TableCell>Address</TableCell>
                       <TableCell>Role</TableCell>
-                      <TableCell>Ratings</TableCell>
+                      <TableCell>Actions</TableCell>
                       <TableCell>Joined</TableCell>
                     </TableRow>
                   </TableHead>
@@ -463,7 +385,7 @@ const StatsDashboard = () => {
                     {filteredUsers
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((user) => (
-                        <TableRow key={user.id}>
+                        <TableRow key={user.id} hover>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               <Avatar sx={{ 
@@ -488,27 +410,15 @@ const StatsDashboard = () => {
                             />
                           </TableCell>
                           <TableCell>
-                                {user.role === 'store_owner' ? (
-                                    loadingRatings[user.id] ? (
-                                    <CircularProgress size={24} />
-                                    ) : userRatings[user.id] ? (
-                                    <Button
-                                        variant="outlined"
-                                        size="small"
-                                        startIcon={<StarHalfIcon color="warning" />}
-                                        onClick={() => handleViewRatings(user.id, user.name)}
-                                    >
-                                        {userRatings[user.id].data.length > 0 ? 
-                                        `${calculateAverageRating(userRatings[user.id].data)} (${userRatings[user.id].count})` : 
-                                        'No ratings'}
-                                    </Button>
-                                    ) : (
-                                    <Typography color="textSecondary">N/A</Typography>
-                                    )
-                                ) : (
-                                    <Typography color="textSecondary">-</Typography>
-                                )}
-                                </TableCell>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              startIcon={<InfoIcon />}
+                              onClick={() => handleViewUser(user)}
+                            >
+                              Details
+                            </Button>
+                          </TableCell>
                           <TableCell>
                             {new Date(user.created_at).toLocaleDateString()}
                           </TableCell>
@@ -533,77 +443,70 @@ const StatsDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Ratings Dialog */}
+      {/* User Details Dialog */}
       <Dialog
-        open={ratingDialogOpen}
-        onClose={handleCloseRatingDialog}
-        maxWidth="md"
+        open={userDialogOpen}
+        onClose={handleCloseUserDialog}
+        maxWidth="sm"
         fullWidth
       >
         <DialogTitle>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">
-              Ratings for {selectedUserName}
+              User Details
             </Typography>
-            <IconButton onClick={handleCloseRatingDialog}>
+            <IconButton onClick={handleCloseUserDialog}>
               <CloseIcon />
             </IconButton>
           </Box>
         </DialogTitle>
         <DialogContent dividers>
-          {selectedUserRatings.length > 0 ? (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Store</TableCell>
-                    <TableCell>Rater</TableCell>
-                    <TableCell>Rating</TableCell>
-                    <TableCell>Comment</TableCell>
-                    <TableCell>Date</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {selectedUserRatings.map((rating) => (
-                    <TableRow key={rating._id}>
-                      <TableCell>{rating.store?.name || 'N/A'}</TableCell>
-                      <TableCell>
-                        <Box display="flex" alignItems="center">
-                          <Avatar 
-                            src={rating.rater?.avatar} 
-                            sx={{ width: 24, height: 24, mr: 1 }}
-                          >
-                            {rating.rater?.name?.charAt(0) || '?'}
-                          </Avatar>
-                          {rating.rater?.name || 'Anonymous'}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <MuiRating 
-                          value={rating.rating} 
-                          precision={0.5} 
-                          readOnly 
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {rating.comment || 'No comment'}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(rating.createdAt).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Typography variant="body1" align="center" sx={{ py: 4 }}>
-              No ratings found for this user
-            </Typography>
+          {selectedUser && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <Avatar 
+                  sx={{ 
+                    width: 100, 
+                    height: 100,
+                    bgcolor: theme.palette.info.main
+                  }}
+                >
+                  <PersonIcon fontSize="large" />
+                </Avatar>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle1" color="textSecondary">Name</Typography>
+                <Typography variant="body1">{selectedUser.name}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle1" color="textSecondary">Email</Typography>
+                <Typography variant="body1">{selectedUser.email}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle1" color="textSecondary">Role</Typography>
+                <Chip
+                  label={selectedUser.role}
+                  color={getRoleColor(selectedUser.role)}
+                  sx={{ textTransform: 'capitalize' }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle1" color="textSecondary">Joined Date</Typography>
+                <Typography variant="body1">
+                  {new Date(selectedUser.created_at).toLocaleDateString()}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" color="textSecondary">Address</Typography>
+                <Typography variant="body1">
+                  {selectedUser.address || 'N/A'}
+                </Typography>
+              </Grid>
+            </Grid>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseRatingDialog} color="primary">
+          <Button onClick={handleCloseUserDialog} color="primary">
             Close
           </Button>
         </DialogActions>

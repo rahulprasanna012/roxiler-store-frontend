@@ -1,7 +1,6 @@
 import { PowerIcon, UserCircleIcon, ChevronDownIcon } from "@heroicons/react/24/solid";
 import { use, useEffect, useState } from "react";
 import { useAuth } from '../../context/AuthContext'; // Adjust the import path as necessary
-import { Link } from "react-router-dom";
 function Navbar() {
 
   const { user, logout } = useAuth(); 
@@ -14,7 +13,7 @@ function Navbar() {
 
 
   
-  console.log(user)
+  
 
   return (
     <nav className="bg-white shadow-sm py-3 px-6 flex justify-between items-center">
@@ -58,6 +57,7 @@ function Navbar() {
             
             <div className="border-t border-gray-100"></div>
             <button
+              onClick={logout} 
               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
             >
               <PowerIcon className="h-4 w-4 mr-2" />
