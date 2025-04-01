@@ -142,208 +142,239 @@ const AuthPage = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
+    <Container 
+  maxWidth="sm" // Changed to 'sm' for a more centered, compact form
+  sx={{ 
+    
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center', // Add this to center horizontally
+    minHeight: '100vh',
+    py: 4,
+  }}
+>
+  <Paper 
+    elevation={3} 
+    sx={{ 
+      p: 4,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      width: '100%', // Takes full width of container
+    }}>
         <Tabs 
           value={activeTab} 
           onChange={handleTabChange}
           variant="fullWidth"
-          sx={{ mb: 3 }}
+          sx={{ 
+            mb: 3,
+            width: '100%'
+          }}
         >
           <Tab label="Login" />
           <Tab label="Register" />
         </Tabs>
 
         {authError && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setAuthError('')}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              width: '100%'
+            }} 
+            onClose={() => setAuthError('')}
+          >
             {authError}
           </Alert>
         )}
 
-        {activeTab === 0 ? (
-          <Box component="form" onSubmit={handleLogin}>
-            <TextField
-              fullWidth
-              label="Email"
-              margin="normal"
-              value={loginForm.email}
-              onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
-              InputProps={{
-                startAdornment: <EmailIcon sx={{ mr: 1, color: 'action.active' }} />
-              }}
-              required
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              margin="normal"
-              type={showPassword ? 'text' : 'password'}
-              value={loginForm.password}
-              onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'action.active' }} />,
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleClickShowPassword}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
-              required
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
-            >
-              Sign In
-            </Button>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="body2" align="center">
-              Don't have an account?{' '}
-              <Button 
-                color="primary"
-                onClick={() => setActiveTab(1)}
-                sx={{ textTransform: 'none' }}
+        <Box 
+          component="form" 
+          onSubmit={activeTab === 0 ? handleLogin : handleRegister}
+          sx={{
+            width: '100%',
+            maxWidth: '400px',
+            mt: 1
+          }}
+        >
+          {activeTab === 0 ? (
+            <>
+              <TextField
+                fullWidth
+                label="Email"
+                margin="normal"
+                value={loginForm.email}
+                onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                InputProps={{
+                  startAdornment: <EmailIcon sx={{ mr: 1, color: 'action.active' }} />
+                }}
+                required
+              />
+              <TextField
+                fullWidth
+                label="Password"
+                margin="normal"
+                type={showPassword ? 'text' : 'password'}
+                value={loginForm.password}
+                onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                InputProps={{
+                  startAdornment: <LockIcon sx={{ mr: 1, color: 'action.active' }} />,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+                required
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2, py: 1.5 }}
               >
-                Register here
+                Sign In
               </Button>
-            </Typography>
-          </Box>
-        ) : (
-          <Box component="form" onSubmit={handleRegister}>
-            <TextField
-              fullWidth
-              label="Full Name (20-60 characters)"
-              margin="normal"
-              value={registerForm.name}
-              onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
-              error={!!errors.name}
-              helperText={errors.name}
-              InputProps={{
-                startAdornment: <PersonIcon sx={{ mr: 1, color: 'action.active' }} />
-              }}
-              required
-            />
-            <TextField
-              fullWidth
-              label="Email"
-              margin="normal"
-              value={registerForm.email}
-              onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
-              error={!!errors.email}
-              helperText={errors.email}
-              InputProps={{
-                startAdornment: <EmailIcon sx={{ mr: 1, color: 'action.active' }} />
-              }}
-              required
-            />
-            <TextField
-              fullWidth
-              label="Address (max 400 characters)"
-              margin="normal"
-              multiline
-              rows={3}
-              value={registerForm.address}
-              onChange={(e) => setRegisterForm({...registerForm, address: e.target.value})}
-              error={!!errors.address}
-              helperText={errors.address}
-              InputProps={{
-                startAdornment: <HomeIcon sx={{ mr: 1, color: 'action.active' }} />
-              }}
-            />
-            <Box sx={{ my: 2 }}>
-              <Typography variant="subtitle2">Role</Typography>
-              <RadioGroup
-                row
-                value={registerForm.role}
-                onChange={(e) => setRegisterForm({...registerForm, role: e.target.value})}
+            </>
+          ) : (
+            <>
+              <TextField
+                fullWidth
+                label="Full Name (20-60 characters)"
+                margin="normal"
+                value={registerForm.name}
+                onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
+                error={!!errors.name}
+                helperText={errors.name}
+                InputProps={{
+                  startAdornment: <PersonIcon sx={{ mr: 1, color: 'action.active' }} />
+                }}
+                required
+              />
+              <TextField
+                fullWidth
+                label="Email"
+                margin="normal"
+                value={registerForm.email}
+                onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
+                error={!!errors.email}
+                helperText={errors.email}
+                InputProps={{
+                  startAdornment: <EmailIcon sx={{ mr: 1, color: 'action.active' }} />
+                }}
+                required
+              />
+              <TextField
+                fullWidth
+                label="Address (max 400 characters)"
+                margin="normal"
+                multiline
+                rows={3}
+                value={registerForm.address}
+                onChange={(e) => setRegisterForm({...registerForm, address: e.target.value})}
+                error={!!errors.address}
+                helperText={errors.address}
+                InputProps={{
+                  startAdornment: <HomeIcon sx={{ mr: 1, color: 'action.active' }} />
+                }}
+              />
+              <Box sx={{ my: 2 }}>
+                <Typography variant="subtitle2">Role</Typography>
+                <RadioGroup
+                  row
+                  value={registerForm.role}
+                  onChange={(e) => setRegisterForm({...registerForm, role: e.target.value})}
+                  sx={{ justifyContent: 'center' }}
+                >
+                  <FormControlLabel value="user" control={<Radio />} label="User" />
+                  <FormControlLabel value="store_owner" control={<Radio />} label="Store Owner" />
+                  <FormControlLabel value="admin" control={<Radio />} label="Admin" />
+                </RadioGroup>
+              </Box>
+              <TextField
+                fullWidth
+                label="Password (8-16 chars with uppercase and special char)"
+                margin="normal"
+                type={showPassword ? 'text' : 'password'}
+                value={registerForm.password}
+                onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
+                error={!!errors.password}
+                helperText={errors.password || "Must include 1 uppercase and 1 special character"}
+                InputProps={{
+                  startAdornment: <LockIcon sx={{ mr: 1, color: 'action.active' }} />,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+                required
+              />
+              <TextField
+                fullWidth
+                label="Confirm Password"
+                margin="normal"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={registerForm.confirmPassword}
+                onChange={(e) => setRegisterForm({...registerForm, confirmPassword: e.target.value})}
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword}
+                InputProps={{
+                  startAdornment: <LockIcon sx={{ mr: 1, color: 'action.active' }} />,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle confirm password visibility"
+                        onClick={handleClickShowConfirmPassword}
+                        edge="end"
+                      >
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+                required
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2, py: 1.5 }}
               >
-                <FormControlLabel value="user" control={<Radio />} label="User" />
-                <FormControlLabel value="store_owner" control={<Radio />} label="Store Owner" />
-                <FormControlLabel value="admin" control={<Radio />} label="Admin" />
-              </RadioGroup>
-            </Box>
-            <TextField
-              fullWidth
-              label="Password (8-16 chars with uppercase and special char)"
-              margin="normal"
-              type={showPassword ? 'text' : 'password'}
-              value={registerForm.password}
-              onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
-              error={!!errors.password}
-              helperText={errors.password || "Must include 1 uppercase and 1 special character"}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'action.active' }} />,
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleClickShowPassword}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
-              required
-            />
-            <TextField
-              fullWidth
-              label="Confirm Password"
-              margin="normal"
-              type={showConfirmPassword ? 'text' : 'password'}
-              value={registerForm.confirmPassword}
-              onChange={(e) => setRegisterForm({...registerForm, confirmPassword: e.target.value})}
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'action.active' }} />,
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle confirm password visibility"
-                      onClick={handleClickShowConfirmPassword}
-                      edge="end"
-                    >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
-              required
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
-            >
-              Register
-            </Button>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="body2" align="center">
-              Already have an account?{' '}
-              <Button 
-                color="primary"
-                onClick={() => setActiveTab(0)}
-                sx={{ textTransform: 'none' }}
-              >
-                Login here
+                Register
               </Button>
-            </Typography>
-          </Box>
-        )}
+            </>
+          )}
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="body2" align="center">
+            {activeTab === 0 ? "Don't have an account?" : "Already have an account?"}{' '}
+            <Button 
+              color="primary"
+              onClick={() => setActiveTab(activeTab === 0 ? 1 : 0)}
+              sx={{ textTransform: 'none' }}
+            >
+              {activeTab === 0 ? "Register here" : "Login here"}
+            </Button>
+          </Typography>
+        </Box>
       </Paper>
     </Container>
   );
 };
+
+
 
 export default AuthPage;
