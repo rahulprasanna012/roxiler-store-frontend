@@ -3,9 +3,9 @@ import api from './api'
 
 
 const UserService = {
-  getAllUsers: async ({params}) => {
+  getAllUsers: async () => {
     try {
-      const response = await api.get('/users',params)
+      const response = await api.get('/users')
       return response.data
     } catch (error) {
       throw error.response?.data?.message || 'Failed to fetch users'

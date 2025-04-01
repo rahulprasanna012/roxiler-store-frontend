@@ -30,30 +30,22 @@ import {
             </li>
           </Link>
   
-          <Link to="/ecommerce">
+          <Link to="/admin/store-add">
             <li className="flex items-center py-2 px-4 rounded-none hover:bg-gray-100 cursor-pointer">
               <ShoppingBagIcon className="h-5 w-5 mr-3 text-gray-600" />
-              <span className="text-gray-700">E-Commerce</span>
+              <span className="text-gray-700">Add Store</span>
             </li>
           </Link>
   
-          <Link to="/inbox">
-            <li className="flex items-center justify-between py-2 px-4 rounded-none hover:bg-gray-100 cursor-pointer">
-              <div className="flex items-center">
-                <InboxIcon className="h-5 w-5 mr-3 text-gray-600" />
-                <span className="text-gray-700">Inbox</span>
-              </div>
-              <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">14</span>
-            </li>
-          </Link>
+          
   
-          <Link to="/profile">
+          <Link to="/admin/user-add">
             <li className="flex items-center py-2 px-4 rounded-none hover:bg-gray-100 cursor-pointer">
               <UserCircleIcon className="h-5 w-5 mr-3 text-gray-600" />
-              <span className="text-gray-700">Profile</span>
+              <span className="text-gray-700">Add User</span>
             </li>
           </Link>
-  
+          
           <Link to="/settings">
             <li className="flex items-center py-2 px-4 rounded-none hover:bg-gray-100 cursor-pointer">
               <Cog6ToothIcon className="h-5 w-5 mr-3 text-gray-600" />

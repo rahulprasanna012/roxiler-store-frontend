@@ -22,7 +22,13 @@ import {
   InputAdornment,
   IconButton,
   useTheme,
-  Button
+  Button,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Rating as MuiRating
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -30,10 +36,13 @@ import {
   Star as StarIcon,
   Person as PersonIcon,
   Clear as ClearIcon,
-  FilterAlt as FilterIcon
+  FilterAlt as FilterIcon,
+  StarHalf as StarHalfIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import AdminServices from '../../services/adminService';
 import UserServices from '../../services/userService';
+import RatingServices from '../../services/ratingService';
 
 const StatsDashboard = () => {
   const theme = useTheme();
@@ -41,11 +50,16 @@ const StatsDashboard = () => {
   const [stats, setStats] = useState({});
   const [allUsers, setAllUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
+  const [userRatings, setUserRatings] = useState({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [loadingRatings, setLoadingRatings] = useState({});
+  const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
+  const [selectedUserRatings, setSelectedUserRatings] = useState([]);
+  const [selectedUserName, setSelectedUserName] = useState('');
 
-  // Initialize filters from URL or use defaults
+  // Filters
   const initialFilters = {
     name: searchParams.get('name') || '',
     email: searchParams.get('email') || '',
@@ -55,27 +69,66 @@ const StatsDashboard = () => {
   const [filters, setFilters] = useState(initialFilters);
   const [filtersApplied, setFiltersApplied] = useState(false);
 
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [statsData, usersData] = await Promise.all([
           AdminServices.getDashboardStats(),
-          UserServices.getAllUsers({}) // Get all users without filtering
+          UserServices.getAllUsers()
         ]);
+        
         setStats(statsData);
         setAllUsers(usersData);
-        setFilteredUsers(usersData); // Initialize filteredUsers with all users
+        setFilteredUsers(usersData);
+        
+        // Pre-fetch ratings for store owners
+        const storeOwners = usersData.filter(user => user.role === 'store_owner');
+        await fetchRatingsForUsers(storeOwners);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
+    
     fetchData();
   }, []);
 
-  // Apply filters whenever filters or allUsers change
+  // Fetch ratings for store owners
+  const fetchRatingsForUsers = async (users) => {
+    const storeOwners = users.filter(user => user.role === 'store_owner');
+    const newRatings = { ...userRatings };
+    const newLoadingRatings = { ...loadingRatings };
+  
+    for (const user of storeOwners) {
+      if (!userRatings[user.id]) {
+        newLoadingRatings[user.id] = true;
+        try {
+          const response = await RatingServices.getUserRatings(user.id);
+          // Ensure we're using the correct data structure
+          const ratingsData = response.data || response; // Handle both cases
+          newRatings[user.id] = {
+            data: Array.isArray(ratingsData) ? ratingsData : ratingsData.data,
+            count: Array.isArray(ratingsData) ? ratingsData.length : ratingsData.count
+          };
+        } catch (error) {
+          console.error(`Error fetching ratings for user ${user.id}:`, error);
+          newRatings[user.id] = {
+            data: [],
+            count: 0
+          };
+        } finally {
+          newLoadingRatings[user.id] = false;
+        }
+      }
+    }
+  
+    setUserRatings(newRatings);
+    setLoadingRatings(newLoadingRatings);
+  };
+  // Apply filters
   useEffect(() => {
     const filtered = allUsers.filter(user => {
       const nameMatch = user.name.toLowerCase().includes(filters.name.toLowerCase());
@@ -88,42 +141,70 @@ const StatsDashboard = () => {
     });
     
     setFilteredUsers(filtered);
-    setPage(0); // Reset to first page when filters change
+    setPage(0);
     
-    // Update URL with current filters
+    // Update URL params
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
     setSearchParams(params);
     
-    // Check if any filters are applied
     setFiltersApplied(Object.values(filters).some(Boolean));
+
+    // Fetch ratings for new store owners in filtered results
+    const newStoreOwners = filtered.filter(
+      user => user.role === 'store_owner' && !userRatings[user.id]
+    );
+    if (newStoreOwners.length > 0) {
+      fetchRatingsForUsers(newStoreOwners);
+    }
   }, [filters, allUsers, setSearchParams]);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+  // View ratings details
+  const handleViewRatings = async (userId, userName) => {
+    try {
+      setSelectedUserName(userName);
+      setRatingDialogOpen(true);
+      
+      if (userRatings[userId]) {
+        setSelectedUserRatings(userRatings[userId].data);
+      } else {
+        const response = await RatingServices.getUserRatings(userId);
+        setSelectedUserRatings(response.data.data);
+        
+        // Update cache
+        setUserRatings(prev => ({
+          ...prev,
+          [userId]: response.data
+        }));
+      }
+    } catch (error) {
+      console.error('Error viewing ratings:', error);
+    }
   };
 
+  // Close ratings dialog
+  const handleCloseRatingDialog = () => {
+    setRatingDialogOpen(false);
+    setSelectedUserRatings([]);
+    setSelectedUserName('');
+  };
+
+  // Table pagination handlers
+  const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
+  // Filter handlers
   const handleFilterChange = (field) => (event) => {
-    setFilters(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }));
+    setFilters(prev => ({ ...prev, [field]: event.target.value }));
   };
-
   const clearFilter = (field) => {
-    setFilters(prev => ({
-      ...prev,
-      [field]: ''
-    }));
+    setFilters(prev => ({ ...prev, [field]: '' }));
   };
-
   const clearAllFilters = () => {
     setFilters({
       name: '',
@@ -131,9 +212,10 @@ const StatsDashboard = () => {
       address: '',
       role: ''
     });
-    setSearchParams({}); // Clear all query params
+    setSearchParams({});
   };
 
+  // Get role color for chips
   const getRoleColor = (role) => {
     switch (role) {
       case 'admin': return 'error';
@@ -142,6 +224,14 @@ const StatsDashboard = () => {
     }
   };
 
+  // Calculate average rating
+  const calculateAverageRating = (ratings) => {
+    if (!ratings || !Array.isArray(ratings) || ratings.length === 0) return 0;
+    const validRatings = ratings.filter(r => typeof r.rating === 'number');
+    if (validRatings.length === 0) return 0;
+    const sum = validRatings.reduce((total, rating) => total + rating.rating, 0);
+    return (sum / validRatings.length).toFixed(1);
+  };
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -149,6 +239,8 @@ const StatsDashboard = () => {
       </Box>
     );
   }
+
+  
 
   return (
     <Box sx={{ p: 3 }}>
@@ -215,19 +307,10 @@ const StatsDashboard = () => {
         </Grid>
       </Grid>
 
-        
-        {/* Other stat cards... */}
-      
-
-      {/* Users Table with Filters */}
+      {/* Users Table */}
       <Card elevation={3}>
         <CardContent>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            mb: 2
-          }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" gutterBottom>
               User Management
             </Typography>
@@ -372,6 +455,7 @@ const StatsDashboard = () => {
                       <TableCell>Email</TableCell>
                       <TableCell>Address</TableCell>
                       <TableCell>Role</TableCell>
+                      <TableCell>Ratings</TableCell>
                       <TableCell>Joined</TableCell>
                     </TableRow>
                   </TableHead>
@@ -404,6 +488,28 @@ const StatsDashboard = () => {
                             />
                           </TableCell>
                           <TableCell>
+                                {user.role === 'store_owner' ? (
+                                    loadingRatings[user.id] ? (
+                                    <CircularProgress size={24} />
+                                    ) : userRatings[user.id] ? (
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<StarHalfIcon color="warning" />}
+                                        onClick={() => handleViewRatings(user.id, user.name)}
+                                    >
+                                        {userRatings[user.id].data.length > 0 ? 
+                                        `${calculateAverageRating(userRatings[user.id].data)} (${userRatings[user.id].count})` : 
+                                        'No ratings'}
+                                    </Button>
+                                    ) : (
+                                    <Typography color="textSecondary">N/A</Typography>
+                                    )
+                                ) : (
+                                    <Typography color="textSecondary">-</Typography>
+                                )}
+                                </TableCell>
+                          <TableCell>
                             {new Date(user.created_at).toLocaleDateString()}
                           </TableCell>
                         </TableRow>
@@ -426,6 +532,82 @@ const StatsDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Ratings Dialog */}
+      <Dialog
+        open={ratingDialogOpen}
+        onClose={handleCloseRatingDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">
+              Ratings for {selectedUserName}
+            </Typography>
+            <IconButton onClick={handleCloseRatingDialog}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedUserRatings.length > 0 ? (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Store</TableCell>
+                    <TableCell>Rater</TableCell>
+                    <TableCell>Rating</TableCell>
+                    <TableCell>Comment</TableCell>
+                    <TableCell>Date</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedUserRatings.map((rating) => (
+                    <TableRow key={rating._id}>
+                      <TableCell>{rating.store?.name || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Box display="flex" alignItems="center">
+                          <Avatar 
+                            src={rating.rater?.avatar} 
+                            sx={{ width: 24, height: 24, mr: 1 }}
+                          >
+                            {rating.rater?.name?.charAt(0) || '?'}
+                          </Avatar>
+                          {rating.rater?.name || 'Anonymous'}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <MuiRating 
+                          value={rating.rating} 
+                          precision={0.5} 
+                          readOnly 
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {rating.comment || 'No comment'}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(rating.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Typography variant="body1" align="center" sx={{ py: 4 }}>
+              No ratings found for this user
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRatingDialog} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
