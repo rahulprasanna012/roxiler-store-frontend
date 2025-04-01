@@ -24,7 +24,7 @@ import {
   Visibility,
   VisibilityOff
 } from '@mui/icons-material';
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 import { ToastContainer, toast } from 'react-toastify';
