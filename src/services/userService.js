@@ -10,7 +10,24 @@ const UserService = {
     } catch (error) {
       throw error.response?.data?.message || 'Failed to fetch users'
     }
+
+
   },
+
+ 
+    getUsersByRole: async (role) => {
+      try {
+        const response = await api.get(`/users/role/${role}`);
+        return response.data.data; // Returns the array of users
+      } catch (error) {
+        console.error(`Error fetching users with role ${role}:`, error);
+        throw error;
+      }
+    
+  },
+
+
+
 
   getUserById: async (id) => {
     try {

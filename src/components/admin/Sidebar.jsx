@@ -8,14 +8,16 @@ import {
   } from "@heroicons/react/24/solid";
 import { StoreOutlined } from "@mui/icons-material";
   import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+
   
   function DefaultSidebar() {
     const navigate = useNavigate();
+
+    const {logout}=useAuth();
   
     const handleLogout = () => {
-      // Add your logout logic here
-      console.log("Logging out...");
-      // Example: navigate('/login') after logout
+      logout();
     };
   
     return (
@@ -54,7 +56,7 @@ import { StoreOutlined } from "@mui/icons-material";
             </li>
           </Link>
   
-          <li 
+          <li
             className="flex items-center py-2 px-4 rounded-none hover:bg-gray-100 cursor-pointer"
             onClick={handleLogout}
           >

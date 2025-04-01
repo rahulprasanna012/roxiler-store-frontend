@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { login as authLogin, logout as authLogout, register as authRegister } from '../services/authService';
+import { login as authLogin, register as authRegister } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await authLogout();
+    
       setUser(null);
       localStorage.removeItem('user');
       Cookies.remove('token');

@@ -5,6 +5,8 @@ import DefaultSidebar from './Sidebar';
 import Stats from './Stats';
 import { Route, Routes } from 'react-router-dom';
 import StoreList from './StoreList';
+import AddUser from './AddUser';
+import AddStore from './AddStore';
 
 const Dashboard = () => {
   return (
@@ -22,8 +24,8 @@ const Dashboard = () => {
           <Routes>
             <Route index element={<Stats />} />  {/* This matches /admin */}
             <Route path="dashboard" element={<Stats />} /> 
-            <Route path="store-add" element={<div>Add Store Component</div>} />
-            <Route path="user-add" element={<div>Add User Component</div>} />
+            <Route path="user-add" element={<AddUser/>} />
+            <Route path="store-add" element={<AddStore/>} />
             <Route path="store-list" element={<StoreList/>} />
             {/* Add other admin routes here */}
           </Routes>

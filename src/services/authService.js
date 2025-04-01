@@ -27,14 +27,6 @@ export const register = async (userData) => {
   }
 };
 
-export const logout = async () => {
-  try {
-    await axios.post(`${API_URL}/auth/logout`);
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
 export const changePassword = async (userId, oldPassword, newPassword) => {
   try {
     await axios.post(`${API_URL}/auth/change-password`, { userId, oldPassword, newPassword });
