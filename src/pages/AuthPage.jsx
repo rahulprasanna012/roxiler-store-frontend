@@ -49,35 +49,29 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('AuthPage useEffect - full user:', user, 'loading:', loading);
-    
     if (!loading && user) {
-      console.log('User role:', user.role);
-      console.log('User object structure:', user);
-      redirectBasedOnRole(user.role);
+      // Get role from nested user object if it exists
+      const userRole = user?.role || user?.user?.role || 'user';
+      redirectBasedOnRole(userRole);
     }
   }, [user, loading, navigate]);
 
+
   const redirectBasedOnRole = (role) => {
-    // Temporary fallback to 'user' if role is undefined
-    const effectiveRole = role || 'user';
-    console.log('Redirecting with role:', effectiveRole);
-    
-    switch (effectiveRole) {
-      case 'admin':
-        navigate('/admin');
-        break;
-      case 'user':
-        navigate('/user');
-        break;
-      case 'store_owner':
-        navigate('/store');
-        break;
-      default:
-        navigate('/');
+    // Prevent multiple redirects
+    if (window.location.pathname !== getPathForRole(role)) {
+      navigate(getPathForRole(role));
     }
   };
 
+  const getPathForRole = (role) => {
+    switch (role) {
+      case 'admin': return '/admin';
+      case 'user': return '/user';
+      case 'store_owner': return '/store';
+      default: return '/';
+    }
+  };
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
   const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);

@@ -17,10 +17,12 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem('user');
 
         if (token && storedUser) {
-          setUser(JSON.parse(storedUser));
-
-            
-
+          const parsedUser = JSON.parse(storedUser);
+          // Ensure we're setting the user object correctly
+          setUser({
+            ...parsedUser,
+            token // Include token in user object
+          });
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
@@ -31,13 +33,17 @@ export const AuthProvider = ({ children }) => {
 
     initializeAuth();
   }, []);
-
   const login = async (email, password) => {
     try {
-      const userData = await authLogin(email, password);
+      const response = await authLogin(email, password);
+      // Extract user data from response and include token
+      const userData = {
+        ...response.user,
+        token: response.token
+      };
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      Cookies.set('token', userData.token, { expires: 7 });
+      Cookies.set('token', response.token, { expires: 7 });
       return userData;
     } catch (error) {
       throw error;

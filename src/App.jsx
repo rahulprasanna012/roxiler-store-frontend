@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/authContext';
+import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './shared/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import AdminPage from './pages/AdminPage';
@@ -15,7 +15,7 @@ function App() {
           <Route path="/login" element={<AuthPage />} />
           <Route path="/" element={<AuthPage />} />
           <Route
-            path="/admin"
+            path="/admin/*"
             element={
               <ProtectedRoute element={<AdminPage />} allowedRoles={['admin']} />
             }
