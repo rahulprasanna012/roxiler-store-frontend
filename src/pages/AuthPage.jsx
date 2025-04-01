@@ -26,7 +26,9 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/authContext';
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -86,60 +88,107 @@ const AuthPage = () => {
     setAuthError('');
   };
 
-  const validateRegisterForm = () => {
-    const newErrors = {};
-    
-    if (!registerForm.name || registerForm.name.length < 20 || registerForm.name.length > 60) {
-      newErrors.name = 'Name must be 20-60 characters';
-    }
-    
-    if (!registerForm.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    
-    if (registerForm.address.length > 400) {
-      newErrors.address = 'Address must be ≤400 characters';
-    }
-    
-    if (!registerForm.password || !/^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,16})/.test(registerForm.password)) {
-      newErrors.password = 'Password must be 8-16 chars with 1 uppercase and 1 special character';
-    }
-    
-    if (registerForm.password !== registerForm.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+ 
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       await login(loginForm.email, loginForm.password);
+      showToast('Login successful!');
       // Navigation will be handled by the useEffect
     } catch (error) {
       setAuthError(error.message || 'Login failed');
     }
   };
 
+  const validateRegisterForm = () => {
+    const newErrors = {};
+    let isValid = true;
+    
+    // Name validation
+    if (!registerForm.name || registerForm.name.trim() === '') {
+      newErrors.name = 'Name is required';
+      isValid = false;
+    } else if (registerForm.name.length < 20 || registerForm.name.length > 60) {
+      newErrors.name = 'Name must be 20-60 characters';
+      isValid = false;
+    }
+    
+    // Email validation
+    if (!registerForm.email || registerForm.email.trim() === '') {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)) {
+      newErrors.email = 'Invalid email format';
+      isValid = false;
+    }
+    
+    // Address validation
+    if (registerForm.address.length > 400) {
+      newErrors.address = 'Address must be ≤400 characters';
+      isValid = false;
+    }
+    
+    // Password validation
+    if (!registerForm.password || registerForm.password.trim() === '') {
+      newErrors.password = 'Password is required';
+      isValid = false;
+    } else if (!/^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,16})/.test(registerForm.password)) {
+      newErrors.password = 'Password must be 8-16 chars with 1 uppercase and 1 special character';
+      isValid = false;
+    }
+    
+    // Confirm Password validation
+    if (!registerForm.confirmPassword || registerForm.confirmPassword.trim() === '') {
+      newErrors.confirmPassword = 'Please confirm your password';
+      isValid = false;
+    } else if (registerForm.password !== registerForm.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!validateRegisterForm()) return;
+    
+    // Validate form before proceeding
+    if (!validateRegisterForm()) {
+      toast.error('Please fix all validation errors before submitting');
+      return;
+    }
   
     try {
-      await register({
+      const response = await register({
         name: registerForm.name,
         email: registerForm.email,
         address: registerForm.address,
         password: registerForm.password,
         role: registerForm.role
       });
-      // Navigation will be handled by the useEffect
+      
+      if (response) {
+        toast.success('Registration successful!');
+        // Reset form after successful registration
+        setRegisterForm({
+          name: '',
+          email: '',
+          address: '',
+          password: '',
+          confirmPassword: '',
+          role: 'user'
+        });
+        setErrors({});
+      }
     } catch (error) {
-      setAuthError(error.message || 'Registration failed');
+      const errorMessage = error.message || 'Registration failed';
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
     }
   };
+
 
   return (
     <Container 
@@ -154,6 +203,21 @@ const AuthPage = () => {
     py: 4,
   }}
 >
+
+<ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      
+
+
   <Paper 
     elevation={3} 
     sx={{ 
