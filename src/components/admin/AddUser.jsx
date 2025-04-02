@@ -27,6 +27,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { LockOpenIcon } from '@heroicons/react/24/solid';
+import { register } from '../../services/authService';
 
 const AddUser = () => {
   const [formData, setFormData] = useState({ 
@@ -111,7 +112,7 @@ const AddUser = () => {
     return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -121,6 +122,13 @@ const AddUser = () => {
     
     // Here you would typically call an API to add the user
     console.log('User data to submit:', formData);
+    const response = await register({
+      name: formData.name,
+      email: formData.email,
+      address: formData.address,
+      password: formData.password,
+      role: formData.role
+    });
     toast.success('User added successfully!');
     
     // Reset form after submission

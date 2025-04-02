@@ -60,9 +60,11 @@ const StoreService = {
     }
   },
 
-  getOwnerDashboard: async () => {
+  getOwnerDashboard: async (ownerId) => {
+
+    
     try {
-      const response = await api.get('/stores/owner/dashboard');
+      const response = await api.get(`/stores/${ownerId}/dashboard`);
       return response.data;
     } catch (error) {
       console.error('Error fetching owner dashboard:', error);

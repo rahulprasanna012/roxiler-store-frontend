@@ -27,7 +27,7 @@ function App() {
             }
           />
           <Route
-            path="/store"
+            path="/store/*"
             element={
               <ProtectedRoute element={<StorePage />} allowedRoles={['store_owner']} />
             }

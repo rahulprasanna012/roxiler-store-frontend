@@ -164,6 +164,9 @@ const StatsDashboard = () => {
     );
   }
 
+
+  console.log(stats)
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Stats Cards */}
@@ -200,7 +203,7 @@ const StatsDashboard = () => {
                     Total Stores
                   </Typography>
                   <Typography variant="h4">
-                    {stats.storesCount || 0}
+                    {stats.storeCount || 0}
                   </Typography>
                 </Box>
               </Box>

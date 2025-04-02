@@ -105,7 +105,7 @@ const AddStore = () => {
     }
     
     // Owner validation
-    if (!formData.owner_id || formData.owner_id.trim() === '') {
+    if (!formData.owner_id) {
       newErrors.owner_id = 'Store owner is required';
       isValid = false;
     }
@@ -125,10 +125,13 @@ const AddStore = () => {
     setLoading(true);
     
     try {
+
+  
+
       const createdStore = await StoreService.createStore(formData);
       
       toast.success('Store created successfully!');
-      navigate(`/stores/${createdStore.id}`); // Redirect to store details after creation
+      navigate(`/admin/store-list`); 
     } catch (error) {
       console.error('Error creating store:', error);
       const errorMsg = error.response?.data?.message || 'Error creating store';
