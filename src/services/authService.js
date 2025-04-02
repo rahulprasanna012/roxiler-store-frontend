@@ -28,6 +28,7 @@ export const register = async (userData) => {
 };
 
 export const changePassword = async (userId, oldPassword, newPassword) => {
+  console.log(userId)
   try {
     await axios.post(`${API_URL}/auth/change-password`, { userId, oldPassword, newPassword });
   } catch (error) {

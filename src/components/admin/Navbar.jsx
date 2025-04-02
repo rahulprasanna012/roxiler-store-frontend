@@ -1,6 +1,9 @@
 import { PowerIcon, UserCircleIcon, ChevronDownIcon } from "@heroicons/react/24/solid";
 import { use, useEffect, useState } from "react";
 import { useAuth } from '../../context/AuthContext'; // Adjust the import path as necessary
+import { Link } from "react-router-dom";
+
+
 function Navbar() {
 
   const { user, logout } = useAuth(); 
@@ -48,12 +51,12 @@ function Navbar() {
               <p className="text-sm font-medium text-gray-700">Signed in as</p>
               <p className="text-sm text-gray-500 truncate">{user.email}</p>
             </div>
-            <a 
-              href="#" 
+            <Link
+              to={`change-password`}
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
               Account Settings
-            </a>
+            </Link>
             
             <div className="border-t border-gray-100"></div>
             <button

@@ -5,6 +5,7 @@ import { Route, Routes } from 'react-router-dom';
 import Navbar from '../admin/Navbar';
 import DefaultSidebar from '../admin/Sidebar';
 import StoreList from './StoreList';
+import ChangePassword from './ChangePassword';
 
 const Dashboard = () => {
   return (
@@ -19,6 +20,7 @@ const Dashboard = () => {
           <Routes>
             <Route index element={<StoreList />} />  
             <Route path="dashboard" element={<StoreList />} /> 
+            <Route path='change-password' element={<ChangePassword />} />
             
            
            
