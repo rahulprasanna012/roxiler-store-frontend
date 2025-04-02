@@ -5,7 +5,7 @@ import { Route, Routes } from 'react-router-dom';
 import Navbar from '../admin/Navbar';
 
 
-import OwnerDashboard from './stats';
+import OwnerDashboard from './Stats';
 import ChangePassword from '../user/ChangePassword';
 
 const Dashboard = () => {
