@@ -7,6 +7,7 @@ import { Route, Routes } from 'react-router-dom';
 import StoreList from './StoreList';
 import AddUser from './AddUser';
 import AddStore from './AddStore';
+import ChangePassword from '../user/ChangePassword';
 
 const Dashboard = () => {
   return (
@@ -27,6 +28,8 @@ const Dashboard = () => {
             <Route path="user-add" element={<AddUser/>} />
             <Route path="store-add" element={<AddStore/>} />
             <Route path="store-list" element={<StoreList/>} />
+            <Route path='change-password' element={<ChangePassword />} />
+
             {/* Add other admin routes here */}
           </Routes>
         </main>
